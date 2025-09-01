@@ -6,16 +6,32 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 /**
- * FAULTY "Singleton": public constructor, getInstance() returns a NEW instance each time,
- * not thread-safe, reload allowed anytime, mutable global state, reflection+serialization-friendly.
+ * Proper Singleton: private constructor, thread-safe lazy initialization,
+ * reflection protection, and serialization safety.
  */
 public class AppSettings implements Serializable {
+    private static volatile AppSettings instance;
+    private static final Object lock = new Object();
     private final Properties props = new Properties();
 
-    public AppSettings() { } // should not be public for true singleton
+    // Private constructor to prevent direct instantiation
+    private AppSettings() {
+        // Prevent reflection-based instantiation
+        if (instance != null) {
+            throw new RuntimeException("Use getInstance() method to get the singleton instance");
+        }
+    }
 
+    // Thread-safe lazy initialization using double-checked locking
     public static AppSettings getInstance() {
-        return new AppSettings(); // returns a fresh instance (bug)
+        if (instance == null) {
+            synchronized (lock) {
+                if (instance == null) {
+                    instance = new AppSettings();
+                }
+            }
+        }
+        return instance;
     }
 
     public void loadFromFile(Path file) {
@@ -28,5 +44,10 @@ public class AppSettings implements Serializable {
 
     public String get(String key) {
         return props.getProperty(key);
+    }
+
+    // Prevent serialization from creating duplicate instances
+    private Object readResolve() {
+        return getInstance();
     }
 }

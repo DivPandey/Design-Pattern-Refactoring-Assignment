@@ -2,11 +2,11 @@ package com.example.config;
 
 import java.nio.file.Path;
 
-/** Thin wrapper that encourages re-loading and multiple instances. */
+/** Thin wrapper that uses the singleton instance. */
 public class SettingsLoader {
     public AppSettings load(Path file) {
-        AppSettings s = new AppSettings(); // encourages extra instances
-        s.loadFromFile(file);
-        return s;
+        AppSettings settings = AppSettings.getInstance(); // Use singleton instance
+        settings.loadFromFile(file);
+        return settings;
     }
 }
